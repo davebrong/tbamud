@@ -886,11 +886,11 @@ ACMD(do_score)
   if (GET_COND(ch, DRUNK) > 10)
     send_to_char(ch, "You are intoxicated.\r\n");
 
-  if (GET_COND(ch, HUNGER) == 0)
-    send_to_char(ch, "You are hungry.\r\n");
+  //if (GET_COND(ch, HUNGER) == 0)
+  //  send_to_char(ch, "You are hungry.\r\n");
 
-  if (GET_COND(ch, THIRST) == 0)
-    send_to_char(ch, "You are thirsty.\r\n");
+  //if (GET_COND(ch, THIRST) == 0)
+  //  send_to_char(ch, "You are thirsty.\r\n");
 
   if (AFF_FLAGGED(ch, AFF_BLIND) && GET_LEVEL(ch) < LVL_IMMORT)
     send_to_char(ch, "You have been blinded!\r\n");
