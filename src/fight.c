@@ -198,6 +198,8 @@ static void make_corpse(struct char_data *ch)
   else
     GET_OBJ_TIMER(corpse) = CONFIG_MAX_PC_CORPSE_TIME;
 
+if (IS_NPC(ch)) { //  || (!IS_NPC(ch) && GET_LEVEL(ch) > 5)) {
+
   /* transfer character's inventory to the corpse */
   corpse->contains = ch->carrying;
   for (o = corpse->contains; o != NULL; o = o->next_content)
@@ -228,7 +230,10 @@ static void make_corpse(struct char_data *ch)
   IS_CARRYING_N(ch) = 0;
   IS_CARRYING_W(ch) = 0;
 
+}
+
   obj_to_room(corpse, IN_ROOM(ch));
+
 }
 
 /* When ch kills victim */
@@ -285,7 +290,12 @@ struct char_data *i;
   update_pos(ch);
 
   make_corpse(ch);
+
+	Crash_rentsave(ch, 0);
+
   extract_char(ch);
+  //char_from_room(ch);
+  //char_to_room(ch, r_mortal_start_room);
 
   if (killer) {
     autoquest_trigger_check(killer, NULL, NULL, AQ_MOB_SAVE);
@@ -295,7 +305,7 @@ struct char_data *i;
 
 void die(struct char_data * ch, struct char_data * killer)
 {
-  gain_exp(ch, -(GET_EXP(ch) / 2));
+  //gain_exp(ch, -(GET_EXP(ch) / 2));
   if (!IS_NPC(ch)) {
     REMOVE_BIT_AR(PLR_FLAGS(ch), PLR_KILLER);
     REMOVE_BIT_AR(PLR_FLAGS(ch), PLR_THIEF);
