@@ -321,10 +321,10 @@ void gain_condition(struct char_data *ch, int condition, int value)
 
   switch (condition) {
   case HUNGER:
-    send_to_char(ch, "You are hungry.\r\n");
+    //send_to_char(ch, "You are hungry.\r\n");
     break;
   case THIRST:
-    send_to_char(ch, "You are thirsty.\r\n");
+    //send_to_char(ch, "You are thirsty.\r\n");
     break;
   case DRUNK:
     if (intoxicated)
