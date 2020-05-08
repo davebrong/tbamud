@@ -252,6 +252,8 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
   need_movement = (movement_loss[SECT(was_in)] +
 		   movement_loss[SECT(going_to)]) / 2;
 
+need_movement = 0; // dave
+
   /* Move Point Requirement Check */
   if (GET_MOVE(ch) < need_movement && !IS_NPC(ch))
   {
