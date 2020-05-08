@@ -504,8 +504,8 @@ static void dam_message(int dam, struct char_data *ch, struct char_data *victim,
   act(buf, FALSE, ch, NULL, victim, TO_NOTVICT);
 
   /* damage message to damager */
-  if (GET_LEVEL(ch) >= LVL_IMMORT)
-	send_to_char(ch, "(%d) ", dam);
+  //if (GET_LEVEL(ch) >= LVL_IMMORT)
+	send_to_char(ch, "(%d) ", dam); // Always show damage to the player
   buf = replace_string(dam_weapons[msgnum].to_char,
 	  attack_hit_text[w_type].singular, attack_hit_text[w_type].plural);
   act(buf, FALSE, ch, NULL, victim, TO_CHAR);

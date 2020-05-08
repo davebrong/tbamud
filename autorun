@@ -1,4 +1,8 @@
 #!/bin/sh
+cd src
+make
+cd ../
+
 #
 # CircleMUD 3.0 autorun script
 # Contributions by Fred Merkel, Stuart Lamble, and Jeremy Elson

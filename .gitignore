@@ -10,3 +10,10 @@ src/util/Makefile
 src/.accepted
 src/depend
 src/util/depend
+lib/plrfiles/
+lib/etc/last
+syslog
+lib/etc/plrmail
+lib/plrobjs/
+log/
+syslog.CRASH
