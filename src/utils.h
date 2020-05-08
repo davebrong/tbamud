@@ -652,8 +652,9 @@ do                                                              \
 /** Return whether or not ch is awake. */
 #define AWAKE(ch) (GET_POS(ch) > POS_SLEEPING)
 /** Defines if ch can see in general in the dark. */
-#define CAN_SEE_IN_DARK(ch) \
-   (AFF_FLAGGED(ch, AFF_INFRAVISION) || (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_HOLYLIGHT)))
+/*#define CAN_SEE_IN_DARK(ch) \
+   (AFF_FLAGGED(ch, AFF_INFRAVISION) || (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_HOLYLIGHT)))*/
+#define CAN_SEE_IN_DARK(ch)	true
 
 /** Defines if ch is good. */
 #define IS_GOOD(ch)    (GET_ALIGNMENT(ch) >= 350)
