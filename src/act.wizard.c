@@ -991,6 +991,20 @@ ACMD(do_stat)
   struct room_data *room;
 
   half_chop(argument, buf1, buf2);
+  
+  if ( GET_LEVEL(ch) < LVL_IMMORT ) {
+		char *name = buf1;
+		int number = get_number(&name);
+		if ((object = get_obj_in_equip_vis(ch, name, &number, ch->equipment)) != NULL)
+			do_stat_object(ch, object);
+		else if ((object = get_obj_in_list_vis(ch, name, &number, ch->carrying)) != NULL)
+		  do_stat_object(ch, object);
+		else if ((object = get_obj_in_list_vis(ch, name, &number, world[IN_ROOM(ch)].contents)) != NULL)
+		  do_stat_object(ch, object);
+		else
+			send_to_char(ch, "You can only review statistics on objects that you can see.\r\n");
+		return;
+  }
 
   if (!*buf1) {
     send_to_char(ch, "Stats on who or what or where?\r\n");

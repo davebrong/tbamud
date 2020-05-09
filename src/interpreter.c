@@ -301,7 +301,7 @@ cpp_extern const struct command_info cmd_info[] = {
   { "socials"  , "socials" , POS_DEAD    , do_commands , 0, SCMD_SOCIALS },
   { "split"    , "split"   , POS_SITTING , do_split    , 1, 0 },
   { "stand"    , "st"      , POS_RESTING , do_stand    , 0, 0 },
-  { "stat"     , "stat"    , POS_DEAD    , do_stat     , LVL_IMMORT, 0 },
+  { "stat"     , "stat"    , POS_DEAD    , do_stat     , 0, 0 },
   { "steal"    , "ste"     , POS_STANDING, do_steal    , 1, 0 },
   { "switch"   , "switch"  , POS_DEAD    , do_switch   , LVL_GOD, 0 },
 
