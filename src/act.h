@@ -318,6 +318,7 @@ ACMD(do_file);
 ACMD(do_force);
 ACMD(do_gecho);
 ACMD(do_goto);
+ACMD(do_home);
 ACMD(do_invis);
 ACMD(do_links);
 ACMD(do_load);
