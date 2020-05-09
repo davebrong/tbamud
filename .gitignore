@@ -17,3 +17,4 @@ lib/etc/plrmail
 lib/plrobjs/
 log/
 syslog.CRASH
+lib/etc/time
