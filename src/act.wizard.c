@@ -1001,8 +1001,13 @@ ACMD(do_stat)
 		  do_stat_object(ch, object);
 		else if ((object = get_obj_in_list_vis(ch, name, &number, world[IN_ROOM(ch)].contents)) != NULL)
 		  do_stat_object(ch, object);
-		else
-			send_to_char(ch, "You can only review statistics on objects that you can see.\r\n");
+	    else if ((victim = get_char_vis(ch, name, &number, FIND_CHAR_ROOM)) != NULL) {
+          if ( IS_NPC(victim) )
+			send_to_char(ch, "Only immortals can see mob statistics.\r\n");
+		  else
+			do_stat_character(ch, victim);
+		} else
+			send_to_char(ch, "You can only review statistics on people or objects that you can see.\r\n");
 		return;
   }
 
