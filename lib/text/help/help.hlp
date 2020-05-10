@@ -2735,10 +2735,6 @@ Empty
 #31
 Empty
 #0
-Empty
-#0
-Empty
-#0
 ENCHANT-WEAPON ENCHANT-ARMOR 
 
 Usage       : cast 'enchant weapon' <weapon>
@@ -3912,6 +3908,25 @@ see what mortals see for debugging purposes.
 
 See Also: TOGGLE
 #31
+HOMEPAGES WEBPAGES WEBSITES ADDRESSES PORT PORTS URLS ADDYS IP-ADDRESSES SITES INTERNET-PROTOCOLS WEBLINKS MUDS ACCOUNTS CONNECTIONS CONNECTING HOSTS WWW PLAYERPORT PLAYER-PORT
+
+Builder Academy Homepage:
+   @C http://www.tbamud.com@n
+
+The address (or IP and port) to TBA:
+TBA         : tbamud.com 9091 IP: 206.41.252.202
+Player Port : tbamud.com 4000 IP: 206.41.252.202
+
+Internet protocol (IP) is what identifies each computer individually on the internet.  The
+Gods can see your IP and report abuse to your provider so behave. 
+ 
+#0
+HOMETOWNS
+
+   Some large MUDs have hometowns to choose from. tbaMUD only has a single mortal
+start room.
+
+#0
 HOUSE
 
 The HOUSE command is used to add or remove guests from your house's guest
@@ -13498,8 +13513,4 @@ zlock - Locks one or all zones. Type zlock for usage.
 zunlock - Locks one or all zones. Type zunlock for usage. 
 
 #31
-KEYWORDS HOME
-
-Teleport to your starting room. Useful if you get lost, or trapped.
-#0
 $~
