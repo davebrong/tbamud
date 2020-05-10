@@ -520,7 +520,7 @@ ACMD(do_kick)
   if (percent > prob) {
     damage(ch, vict, 0, SKILL_KICK);
   } else
-    damage(ch, vict, GET_LEVEL(ch) / 2, SKILL_KICK);
+    damage(ch, vict, GET_LEVEL(ch) * 3, SKILL_KICK); // was level / 2, seemed very weak for a 3-pulse pause penalty.  
 
   WAIT_STATE(ch, PULSE_VIOLENCE * 3);
 }
@@ -549,17 +549,19 @@ ACMD(do_bandage)
     return;
   }
 
-  if (GET_HIT(vict) >= 0) {
+  /*if (GET_HIT(vict) >= 0) {
     send_to_char(ch, "You can only bandage someone who is close to death.\r\n");
     return;
-  }
+  }*/
 
   WAIT_STATE(ch, PULSE_VIOLENCE * 2);
 
   percent = rand_number(1, 101);        /* 101% is a complete failure */
   prob = GET_SKILL(ch, SKILL_BANDAGE);
+  
+  //send_to_char(ch, "Percent %d / prob %d", percent, prob);
 
-  if (percent <= prob) {
+  if ((percent*2) <= prob) { // give double chances
     act("Your attempt to bandage fails.", FALSE, ch, 0, 0, TO_CHAR);
     act("$n tries to bandage $N, but fails miserably.", TRUE, ch, 
       0, vict, TO_NOTVICT);
@@ -567,10 +569,23 @@ ACMD(do_bandage)
     return;
   }
 
-  act("You successfully bandage $N.", FALSE, ch, 0, vict, TO_CHAR);
-  act("$n bandages $N, who looks a bit better now.", TRUE, ch, 0, 
-    vict, TO_NOTVICT);
-  act("Someone bandages you, and you feel a bit better now.",
-         FALSE, ch, 0, vict, TO_VICT);
-  GET_HIT(vict) = 0;
+
+	int heal = GET_MAX_HIT(vict) / 10; // bandages for a tenth of available health
+	if ( GET_HIT(vict) + heal >= GET_MAX_HIT(vict) )
+		heal = GET_MAX_HIT(vict) - GET_HIT(vict);
+
+  char healmsg[MAX_INPUT_LENGTH];
+  char healmsg2[MAX_INPUT_LENGTH];
+  
+  sprintf(healmsg, "You successfully bandage $N. (%d)", heal);
+  
+  act(healmsg, FALSE, ch, 0, vict, TO_CHAR);
+  act("$n bandages $N, who looks a bit better now.", TRUE, ch, 0, vict, TO_NOTVICT);
+
+  if ( ch != vict ) {
+	sprintf(healmsg2, "Someone bandages you, and you feel a bit better now. (+%d)", heal);
+	act(healmsg2, FALSE, ch, 0, vict, TO_VICT);
+  }
+  	 
+  GET_HIT(vict) = GET_HIT(vict) + heal;
 }
