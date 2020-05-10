@@ -561,7 +561,7 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict,
           act(msg->die_msg.room_msg, FALSE, ch, weap, vict, TO_NOTVICT);
         } else {
           if (msg->hit_msg.attacker_msg) {
-            send_to_char(ch, CCYEL(ch, C_CMP));
+            send_to_char(ch, "(%d) %s", dam, CCYEL(ch, C_CMP));
             act(msg->hit_msg.attacker_msg, FALSE, ch, weap, vict, TO_CHAR);
             send_to_char(ch, CCNRM(ch, C_CMP));
           }
@@ -601,7 +601,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int attackty
   char local_buf[256];
   struct char_data *tmp_char;
   struct obj_data *corpse_obj;
-
+  
   if (GET_POS(victim) <= POS_DEAD) {
     /* This is "normal"-ish now with delayed extraction. -gg 3/15/2001 */
     if (PLR_FLAGGED(victim, PLR_NOTDEADYET) || MOB_FLAGGED(victim, MOB_NOTDEADYET))
