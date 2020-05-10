@@ -35,23 +35,6 @@
 static void print_group(struct char_data *ch);
 static void display_group_list(struct char_data * ch);
 
-ACMD(do_home)
-{
-  char buf[MAX_STRING_LENGTH];
-
-  snprintf(buf, sizeof(buf), "$n %s", POOFOUT(ch) ? POOFOUT(ch) : "disappears in a puff of smoke.");
-  act(buf, TRUE, ch, 0, 0, TO_ROOM);
-
-  char_from_room(ch);
-  char_to_room(ch, real_room(CONFIG_MORTAL_START));
-
-  snprintf(buf, sizeof(buf), "$n %s", POOFIN(ch) ? POOFIN(ch) : "appears with an ear-splitting bang.");
-  act(buf, TRUE, ch, 0, 0, TO_ROOM);
-
-  look_at_room(ch, 0);
-  enter_wtrigger(&world[IN_ROOM(ch)], ch, -1);
-}
-
 ACMD(do_quit)
 {
   if (IS_NPC(ch) || !ch->desc)

@@ -179,7 +179,6 @@ cpp_extern const struct command_info cmd_info[] = {
   { "hold"     , "hold"    , POS_RESTING , do_grab     , 1, 0 },
   { "holler"   , "holler"  , POS_RESTING , do_gen_comm , 1, SCMD_HOLLER },
   { "holylight", "holy"    , POS_DEAD    , do_gen_tog  , LVL_IMMORT, SCMD_HOLYLIGHT },
-  { "home"	   , "hom"    , POS_SLEEPING, do_home   , 0, 0 },
   { "house"    , "house"   , POS_RESTING , do_house    , 0, 0 },
 
   { "inventory", "i"       , POS_DEAD    , do_inventory, 0, 0 },
