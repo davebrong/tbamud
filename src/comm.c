@@ -74,6 +74,7 @@
 #include "constants.h" /* For mud versions */
 #include "boards.h"
 #include "act.h"
+#include "class.h"
 #include "ban.h"
 #include "msgedit.h"
 #include "fight.h"
@@ -1123,19 +1124,26 @@ void echo_on(struct descriptor_data *d)
   write_to_output(d, "%s", on_string);
 }
 
-static char *make_prompt(struct descriptor_data *d)
+char *make_prompt(struct descriptor_data *d)
 {
   static char prompt[MAX_PROMPT_LENGTH];
+  int percent;
 
   /* Note, prompt is truncated at MAX_PROMPT_LENGTH chars (structs.h) */
 
-  if (d->showstr_count)
+  if (d->showstr_count) {
     snprintf(prompt, sizeof(prompt),
-      "[ Return to continue, (q)uit, (r)efresh, (b)ack, or page number (%d/%d) ]",
-      d->showstr_page, d->showstr_count);
-  else if (d->str)
-    strcpy(prompt, "] ");	/* strcpy: OK (for 'MAX_PROMPT_LENGTH >= 3') */
+	    "\r\n[ Return to continue, (q)uit, (r)efresh, (b)ack, or page number (%d/%d) ]",
+	    d->showstr_page, d->showstr_count);
+  } else if (d->str)
+    strcpy(prompt, "] ");
   else if (STATE(d) == CON_PLAYING && !IS_NPC(d->character)) {
+
+
+  if (PRF_FLAGGED(d->character, PRF_BUILDWALK))
+      strcpy(prompt, "< BuildWalking Mode ACTIVE! > ");
+    else {
+
     int count;
     size_t len = 0;
 
@@ -1146,74 +1154,170 @@ static char *make_prompt(struct descriptor_data *d)
       if (count >= 0)
         len += count;
     }
-    /* show only when below 25% */
-    if (PRF_FLAGGED(d->character, PRF_DISPAUTO) && len < sizeof(prompt)) {
-      struct char_data *ch = d->character;
-      if (GET_HIT(ch) << 2 < GET_MAX_HIT(ch) ) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dH ", GET_HIT(ch));
-        if (count >= 0)
-          len += count;
-      }
-      if (GET_MANA(ch) << 2 < GET_MAX_MANA(ch) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dM ", GET_MANA(ch));
-        if (count >= 0)
-          len += count;
-      }
-      if (GET_MOVE(ch) << 2 < GET_MAX_MOVE(ch) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dV ", GET_MOVE(ch));
-        if (count >= 0)
-          len += count;
-      }
-    } else { /* not auto prompt */
+
+   if (PRF_FLAGGED(d->character, PRF_AFK) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, "[%sAFK%s] ", CCRED(d->character, C_NRM), CCNRM(d->character, C_NRM));
+      if (count >= 0)
+        len += count;
+   }
+
       if (PRF_FLAGGED(d->character, PRF_DISPHP) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dH ", GET_HIT(d->character));
+        if (GET_MAX_HIT(d->character) > 0)
+	      percent = (100 * GET_HIT(d->character)) / GET_MAX_HIT(d->character);
+	    else
+  	      percent = -1;
+
+	    if (percent >= 90) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, "%s%dh",
+          CCWHT(d->character, C_NRM), GET_HIT(d->character));
+	    } else if (percent >= 66) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, "%s%dh",
+          CCGRN(d->character, C_NRM), GET_HIT(d->character));
+	    } else if (percent >= 33) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, "%s%dh",
+          CCYEL(d->character, C_NRM), GET_HIT(d->character));
+  	    } else if (percent >= 15) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, "%s%dh",
+          CCRED(d->character, C_NRM), GET_HIT(d->character));
+	    } else {
+          count = snprintf(prompt + len, sizeof(prompt) - len, "%s%dh",
+          CCRED(d->character, C_NRM), GET_HIT(d->character));
+        }
+
         if (count >= 0)
           len += count;
       }
+
+   if (PRF_FLAGGED(d->character, PRF_DISPHMAX) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, "(%dH)", GET_MAX_HIT(d->character));
+      if (count >= 0)
+        len += count;
+   }
 
       if (PRF_FLAGGED(d->character, PRF_DISPMANA) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dM ", GET_MANA(d->character));
+        if (GET_MAX_MANA(d->character) > 0)
+	      percent = (100 * GET_MANA(d->character)) / GET_MAX_MANA(d->character);
+	    else
+	      percent = -1;
+
+	    if (percent >= 90) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dm",
+          CCWHT(d->character, C_NRM), GET_MANA(d->character));
+	    } else if (percent >= 66) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dm",
+          CCGRN(d->character, C_NRM), GET_MANA(d->character));
+	    } else if (percent >= 33) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dm",
+          CCYEL(d->character, C_NRM), GET_MANA(d->character));
+	    } else if (percent >= 15) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dm",
+          CCRED(d->character, C_NRM), GET_MANA(d->character));
+        } else {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dm",
+          CCRED(d->character, C_NRM), GET_MANA(d->character));
+        }
+
         if (count >= 0)
           len += count;
       }
+
+   if (PRF_FLAGGED(d->character, PRF_DISPMMAX) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, "(%dM)", GET_MAX_MANA(d->character));
+      if (count >= 0)
+        len += count;
+   }
 
       if (PRF_FLAGGED(d->character, PRF_DISPMOVE) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dV ", GET_MOVE(d->character));
+        if (GET_MAX_MOVE(d->character) > 0)
+	      percent = (100 * GET_MOVE(d->character)) / GET_MAX_MOVE(d->character);
+        else
+      percent = -1;
+
+	    if (percent >= 90) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dv",
+          CCWHT(d->character, C_NRM), GET_MOVE(d->character));
+	    } else if (percent >= 66) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dv",
+          CCGRN(d->character, C_NRM), GET_MOVE(d->character));
+	    } else if (percent >= 33) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dv",
+          CCYEL(d->character, C_NRM), GET_MOVE(d->character));
+	    } else if (percent >= 15) {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dv",
+          CCRED(d->character, C_NRM), GET_MOVE(d->character));
+	    } else {
+          count = snprintf(prompt + len, sizeof(prompt) - len, " %s%dv",
+         CCRED(d->character, C_NRM), GET_MOVE(d->character));
+        }
+
         if (count >= 0)
           len += count;
       }
-    }
 
-    if (PRF_FLAGGED(d->character, PRF_BUILDWALK) && len < sizeof(prompt)) {
-      count = snprintf(prompt + len, sizeof(prompt) - len, "BUILDWALKING ");
+         if (PRF_FLAGGED(d->character, PRF_DISPVMAX) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, "(%dV)", GET_MAX_MOVE(d->character));
       if (count >= 0)
         len += count;
-    }
+   }
 
-    if (PRF_FLAGGED(d->character, PRF_AFK) && len < sizeof(prompt)) {
-      count = snprintf(prompt + len, sizeof(prompt) - len, "AFK ");
+      if (PRF_FLAGGED(d->character, PRF_DISPEXP) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, " %sXP:%d", CCWHT(d->character, C_NRM), GET_EXP(d->character));
       if (count >= 0)
         len += count;
-    }
+   }
 
-     if (GET_LAST_NEWS(d->character) < newsmod)
-     {
-       count = snprintf(prompt + len, sizeof(prompt) - len, "(news) ");
-       if (count >= 0)
-         len += count;
-     }
+         if (PRF_FLAGGED(d->character, PRF_DISPGOLD) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, " %sGold:%d", CCYEL(d->character, C_NRM), GET_GOLD(d->character));
+      if (count >= 0)
+        len += count;
+   }
+	if (GET_LEVEL(d->character) <= LVL_IMMORT) {
+         if (PRF_FLAGGED(d->character, PRF_DISPTNL) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, " %sTNL:%d", CCCYN(d->character, C_NRM), level_exp(GET_CLASS(d->character), GET_LEVEL(d->character) + 1) - GET_EXP(d->character));
+      if (count >= 0)
+        len += count;
+   }}
 
-     if (GET_LAST_MOTD(d->character) < motdmod)
-     {
-       count = snprintf(prompt + len, sizeof(prompt) - len, "(motd) ");
-       if (count >= 0)
-         len += count;
-     }
+            if (PRF_FLAGGED(d->character, PRF_DISPALIGN) && len < sizeof(prompt)) {
+    count = snprintf(prompt + len, sizeof(prompt) - len, " %sAlign:%d", CCNRM(d->character, C_NRM), GET_ALIGNMENT(d->character));
+      if (count >= 0)
+        len += count;
+   }
+   /* Fighting Prompt */
+   if (PRF_FLAGGED(d->character, PRF_DISPMOB) && len < sizeof(prompt)) {
+   if (FIGHTING(d->character)) {
+   if (GET_MAX_HIT(FIGHTING(d->character)) > 0)
+    percent = (100 * GET_HIT(FIGHTING(d->character))) / GET_MAX_HIT(FIGHTING(d->character));
+    else
+    percent = -1;
+        sprintf(prompt + strlen(prompt), "(%d%%) ", (int)(GET_HIT(FIGHTING(d->character))*100)/GET_MAX_HIT(FIGHTING(d->character)));
+    if (percent >= 100)
+    sprintf(prompt + strlen(prompt), "\x1B[0;32mExcellent condition\x1B[0;0m ");
+    else if (percent >= 90)
+    sprintf(prompt + strlen(prompt), "\x1B[0;32mA few scratches\x1B[0;0m ");
+    else if (percent >= 75)
+    sprintf(prompt + strlen(prompt), "\x1B[0;32mSmall wounds and bruises\x1B[0;0m ");
+    else if (percent >= 50)
+    sprintf(prompt + strlen(prompt), "\x1B[0;0mQuite a few wounds\x1B[0;0m ");
+    else if (percent >= 30)
+    sprintf(prompt + strlen(prompt), "\x1B[0;0mBig nasty wounds and scratches\x1B[0;0m ");
+    else if (percent >= 15)
+    sprintf(prompt + strlen(prompt), "\x1B[1;31mPretty hurt\x1B[0;0m ");
+    else if (percent >= 0)
+    sprintf(prompt + strlen(prompt), "\x1B[1;31mAwful condition\x1B[0;0m ");
+    else
+    sprintf(prompt + strlen(prompt), "\x1B[1;31mBleeding awfully from big wounds\x1B[0;0m ");
+  } else {
+    count = snprintf(prompt + len, sizeof(prompt) - len, " %sMob: %sN/A", CCNRM(d->character, C_NRM), CCRED(d->character, C_NRM));
+    }}
 
+/* strncat */
     if (len < sizeof(prompt))
-      strncat(prompt, "> ", sizeof(prompt) - len - 1);	/* strncat: OK */
+      strncat(prompt, " \x1B[0;0m> ", sizeof(prompt) + len - 1);	/* strncat: OK */
+  }
+
   } else if (STATE(d) == CON_PLAYING && IS_NPC(d->character))
-    snprintf(prompt, sizeof(prompt), "%s> ", GET_NAME(d->character));
+    snprintf(prompt, sizeof(prompt), " %s%s> ", CCNRM(d->character, C_NRM), GET_NAME(d->character));
   else
     *prompt = '\0';
 
