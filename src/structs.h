@@ -202,16 +202,6 @@
 #define PLR_BUG          17   /**< Player is writing a bug */
 #define PLR_IDEA         18   /**< Player is writing an idea */
 #define PLR_TYPO         19   /**< Player is writing a typo */
-/* fancy prompt: https://www.circlemud.org/pub/CircleMUD/contrib/snippets/players/prompt-fancy.txt */
-#define PRF_DISPMAX     20 /* Display Max status in prompt		*/
-#define PRF_DISPHMAX	21 /* Display Max HP in prompt			*/
-#define PRF_DISPMMAX	22 /* Display Max Mana in prompt		*/
-#define PRF_DISPVMAX	23 /* Display Max Move in prompt		*/
-#define PRF_DISPEXP		24 /* Display EXP in prompt			*/
-#define PRF_DISPGOLD	25 /* Display Gold in prompt			*/
-#define PRF_DISPTNL		26 /* Display TNL in prompt			*/
-#define PRF_DISPALIGN	27 /* Display Alignment in prompt		*/
-#define PRF_DISPMOB		28 /* Display Mob/Fighting in Prompt		*/
 
 /* Mobile flags: used by char_data.char_specials.act */
 #define MOB_SPEC            0   /**< Mob has a callable spec-proc */

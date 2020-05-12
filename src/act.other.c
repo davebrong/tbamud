@@ -621,17 +621,7 @@ ACMD(do_display)
   skip_spaces(&argument);
 
   if (!*argument) {
-    //send_to_char(ch, "Usage: prompt { { H | M | V } | all | auto | none }\r\n");
-	send_to_char(ch, "            Prompt Usage\r\n");
-	send_to_char(ch, "   h) Hit Points          H) Max Hit Points\r\n");
-	send_to_char(ch, "   m) Mana Points         M) Max Mana Points\r\n");
-	send_to_char(ch, "   v) Move Points         V) Max Move Points\r\n");
-	send_to_char(ch, "   e) Experience          E) XP to next level\r\n");
-	send_to_char(ch, "   g) Gold                M) Alignment\r\n");
-	send_to_char(ch, "   x) Fighting/Mob-prompt, shows the status of your opponent. \r\n\r\n");
-	send_to_char(ch, "   You can also use the strings: max, auto, all, on, off\r\n");
-	send_to_char(ch, "   Usage EX.: display hHEg  <-- will display Hit HP MaxHP TNL GOLD\r\n");
-	send_to_char(ch, "   Usage EX.: display all   <-- will display everything in the list.\r\n");
+    send_to_char(ch, "Usage: prompt { { H | M | V } | all | auto | none }\r\n");
     return;
   }
 
@@ -641,89 +631,32 @@ ACMD(do_display)
     return;
   }
 
-if (!str_cmp(argument, "on") || !str_cmp(argument, "all")) {
+  if (!str_cmp(argument, "on") || !str_cmp(argument, "all")) {
     SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
     SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHMAX);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMMAX);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPVMAX);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPEXP);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPGOLD);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPTNL);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPALIGN);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOB);
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
   } else if (!str_cmp(argument, "off") || !str_cmp(argument, "none")) {
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHMAX);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMMAX);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPVMAX);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPEXP);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPGOLD);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPTNL);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPALIGN);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOB);
-	REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
   } else {
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHMAX);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMMAX);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPVMAX);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPEXP);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPGOLD);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPTNL);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPALIGN);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOB);
-	REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
 
     for (i = 0; i < strlen(argument); i++) {
-      switch (argument[i]) {
+      switch (LOWER(argument[i])) {
       case 'h':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
-	break;
-      case 'H':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHMAX);
+        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
 	break;
       case 'm':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-	break;
-      case 'M':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMMAX);
+        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
 	break;
       case 'v':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
-	break;
-      case 'V':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPVMAX);
-	break;
-      case 'e':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPEXP);
-	break;
-      case 'g':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPGOLD);
-	break;
-      case 'E':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPTNL);
-	break;
-      case 'a':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPALIGN);
-	break;
-      case 'x':
-	SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOB);
+        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
 	break;
       default:
-	send_to_char(ch, "            Prompt Usage\r\n");
-	send_to_char(ch, "   h) Hit Points          H) Max Hit Points\r\n");
-	send_to_char(ch, "   m) Mana Points         M) Max Mana Points\r\n");
-	send_to_char(ch, "   v) Move Points         V) Max Move Points\r\n");
-	send_to_char(ch, "   e) Experience          E) XP to next level\r\n");
-	send_to_char(ch, "   g) Gold                M) Alignment\r\n");
-	send_to_char(ch, "   x) Fighting/Mob-prompt, shows the status of your opponent. \r\n\r\n");
-	send_to_char(ch, "   You can also use the strings: max, auto, all, on, off\r\n");
-	send_to_char(ch, "   Usage EX.: display hHEg  <-- will display Hit HP MaxHP TNL GOLD\r\n");
-	send_to_char(ch, "   Usage EX.: display all   <-- will display everything in the list.\r\n");
+	send_to_char(ch, "Usage: prompt { { H | M | V } | all | auto | none }\r\n");
 	return;
       }
     }
