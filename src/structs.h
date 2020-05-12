@@ -586,7 +586,7 @@
 #define PULSE_TIMESAVE	(30 * 60 RL_SEC)
 /* Variables for the output buffering system */
 #define MAX_SOCK_BUF       (24 * 1024) /**< Size of kernel's sock buf   */
-#define MAX_PROMPT_LENGTH  96          /**< Max length of prompt        */
+#define MAX_PROMPT_LENGTH  196          /**< Max length of prompt        */
 #define GARBAGE_SPACE      32          /**< Space for **OVERFLOW** etc  */
 #define SMALL_BUFSIZE      1024        /**< Static output buffer size   */
 /** Max amount of output that can be buffered */
@@ -863,6 +863,7 @@ struct char_player_data
   char *long_descr;              /**< PC / NPC look description */
   char *description;             /**< NPC Extra descriptions */
   char *title;                   /**< PC / NPC title */
+  char *prompt;                  /**< PC Custom Prompt - https://www.tbamud.com/forum/8-snippets/4404-bespoke-prompt */
   byte sex;                      /**< PC / NPC sex */
   byte chclass;                  /**< PC / NPC class */
   byte level;                    /**< PC / NPC level */

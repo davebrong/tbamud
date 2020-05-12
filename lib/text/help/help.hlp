@@ -2556,19 +2556,17 @@ If the victim is higher level than caster, the spell will inflict
 
 See also: DISPEL-EVIL
 #0
-DISPLAYS PROMPTS HIT-PNT-DISPLAY
+DISPLAY
 
-Usage: prompt < H | M | V | all | auto | off >
+Usage: display <number>
 
-Modify your prompt to show your hit points, mana, and/or movement points.
+Set your prompt to a preset display.
 
-  > prompt hv       Display hit points and movement points.
-  > prompt off      Return to no prompt.
-  > prompt all      Display hit, mana, and movement points.
+Typing display by itself will show a list of options.
 
-  > prompt auto     A separate toggle that will only display your selected 
-                    prompt if the values drop below 30% of max.
-See also: TOGGLE
+Example: display 2
+
+See also: PROMPT
 #0
 DONATE
 
@@ -13513,4 +13511,25 @@ zlock - Locks one or all zones. Type zlock for usage.
 zunlock - Locks one or all zones. Type zunlock for usage. 
 
 #31
+PROMPT HIT-PNT-DISPLAY
+
+Usage: prompt <string>
+
+Manually set a custom prompt. <string> can be made up from the following values:
+
+%h - current hitpoints          %H - Max hitpoints         %ph - hitpoints as a percentage
+%m - current mana points  %M - Max mana points  %pm - mana as a percentage
+%v - current move points    %V - Max move points   %pv - move as a percentage
+%g - gold on hand                 %G - gold in bank
+%q - quest points
+%x - current XP                      %X - XP till next level
+%% - show a percentage sign
+%_ - new line
+
+All color codes are accepted using the '@' symbol.
+
+Example: prompt %h %m %v @W>@n 
+
+See also: DISPLAY TOGGLE COLOUR
+#0
 $~

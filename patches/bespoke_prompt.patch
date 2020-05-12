@@ -1,0 +1,438 @@
+diff -BbuprN -x '*.o' src_original/act.h src/act.h
+--- src_original/act.h	2018-04-24 08:22:09.048184400 +0100
++++ src/act.h	2018-04-26 19:33:53.391236600 +0100
+@@ -238,6 +238,7 @@ ACMD(do_use);
+ #define SCMD_RECITE 2
+ /* Functions without subcommands */
+ ACMD(do_display);
++ACMD(do_prompt);
+ ACMD(do_group);
+ ACMD(do_happyhour);
+ ACMD(do_hide);
+diff -BbuprN -x '*.o' src_original/act.other.c src/act.other.c
+--- src_original/act.other.c	2018-04-24 08:22:09.379057800 +0100
++++ src/act.other.c	2018-04-27 08:40:05.526912900 +0100
+@@ -612,57 +612,63 @@ ACMD(do_use)
+ 
+ ACMD(do_display)
+ {
+-  size_t i;
++    char arg[MAX_INPUT_LENGTH];
++    int i, x;
+ 
+-  if (IS_NPC(ch)) {
+-    send_to_char(ch, "Monsters don't need displays.  Go away.\r\n");
+-    return;
++    const char *def_prompts[][2] = {        
++        { "Stock Circle"	     , "\tn%hhp %mmn %vmv>"					},
++	{ "Colorized Standard Circle", "\tR%h\trhp \tB%m\tbmn \tG%v\tgmv\tD>\tn"			},
++	{ "Standard Percentile"	     , "\tR%ph%%\trhp \tB%pm%%\tbmn \tG%pv%%\tgmv\tD>\tn \tR%O \tY%T\tn"	},
++	{ "Extra Features"	     , "\tcOpponent\tD: \tB%o \tW/ \tcTank\tD: \tB%t%_"
++                                               "\tR%h\tD(\tr%H\tD)\twhitp \tB%m\tD(\tb%M\tD)\twmana \tG%v\tD(\tg%V\tD)\twmove\tn>"},
++        { "Full Featured"            , "\tR%O \tY%T%_"
++                                               "\tR%h\tD/\tr%H \tB%m\tD/\tb%M \tG%v\tD/\tg%V %_\tY%g\tygold \tW%x\twxp \tM%q\tmqp\tD>\tn"},
++	{ "\n"                       , "\n"				 }
++	};
++    one_argument(argument, arg);
++    if (!*arg) {
++        send_to_char(ch, "The following pre-set prompts are available...\r\n");
++        
++        for (i = 0; *def_prompts[i][0] != '\n'; i++)
++            send_to_char(ch, "  %d. %-25s  %s\r\n", i, def_prompts[i][0], def_prompts[i][1]);
++        
++        send_to_char(ch, "\r\nUsage: display <number>\r\n"
++			 "To create your own prompt, use \"prompt <str>\".\r\n");
++    } else if (!isdigit(*arg))
++        send_to_char(ch, "Usage: display <number>\r\n"
++   			 "Type \"display\" without arguments for a list of preset prompts.\r\n");
++    else {
++        i = atoi(arg);
++        if (i < 0) {
++            send_to_char(ch, "The number cannot be negative.\r\n");
++        } else {
++            for (x = 0; *def_prompts[x][0] != '\n'; x++);
++            if (i >= x) {
++                send_to_char(ch, "The range for the prompt number is 0-%d.\r\n", x);
++            } else {
++                if (GET_PROMPT(ch))
++                    free(GET_PROMPT(ch));
++                GET_PROMPT(ch) = strdup(def_prompts[i][1]);
++                send_to_char(ch, "Set your prompt to the %s preset prompt.\r\n", def_prompts[i][0]);
+   }
+-  skip_spaces(&argument);
+-
+-  if (!*argument) {
+-    send_to_char(ch, "Usage: prompt { { H | M | V } | all | auto | none }\r\n");
+-    return;
+   }
+-
+-  if (!str_cmp(argument, "auto")) {
+-    TOGGLE_BIT_AR(PRF_FLAGS(ch), PRF_DISPAUTO);
+-    send_to_char(ch, "Auto prompt %sabled.\r\n", PRF_FLAGGED(ch, PRF_DISPAUTO) ? "en" : "dis");
+-    return;
+   }
++}
++
+ 
+-  if (!str_cmp(argument, "on") || !str_cmp(argument, "all")) {
+-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
+-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
+-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+-  } else if (!str_cmp(argument, "off") || !str_cmp(argument, "none")) {
+-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
+-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
+-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
++ACMD(do_prompt) 
++{
++  skip_spaces(&argument);
++  if (!*argument) {
++    send_to_char(ch, "Your prompt is currently: %s\r\n", (GET_PROMPT(ch) ? GET_PROMPT(ch) : "n/a"));
+   } else {
+-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
+-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
+-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+-
+-    for (i = 0; i < strlen(argument); i++) {
+-      switch (LOWER(argument[i])) {
+-      case 'h':
+-        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
+-	break;
+-      case 'm':
+-        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
+-	break;
+-      case 'v':
+-        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+-	break;
+-      default:
+-	send_to_char(ch, "Usage: prompt { { H | M | V } | all | auto | none }\r\n");
+-	return;
+-      }
+-    }
+-  }
++    if (GET_PROMPT(ch))		
++        free(GET_PROMPT(ch));
+ 
+-  send_to_char(ch, "%s", CONFIG_OK);
++    GET_PROMPT(ch) = strdup(argument);
++    delete_doubledollar(GET_PROMPT(ch));
++    send_to_char(ch, "Okay, set your prompt to: %s\r\n", GET_PROMPT(ch));
++  }
+ }
+ 
+ #define TOG_OFF 0
+diff -BbuprN -x '*.o' src_original/comm.c src/comm.c
+--- src_original/comm.c	2018-04-24 08:22:10.492017500 +0100
++++ src/comm.c	2018-04-27 09:51:45.837834100 +0100
+@@ -89,6 +89,7 @@
+ 
+ extern time_t motdmod;
+ extern time_t newsmod;
++extern int level_exp(int chclass, int level);
+ 
+ /* locally defined globals, used externally */
+ struct descriptor_data *descriptor_list = NULL;   /* master desc list */
+@@ -911,7 +912,9 @@ void game_loop(socket_t local_mother_des
+     /* Print prompts for other descriptors who had no other output */
+     for (d = descriptor_list; d; d = d->next) {
+       if (!d->has_prompt) {
+-	      write_to_descriptor(d->descriptor, make_prompt(d));
++          char *promptstring = make_prompt(d);
++          int promptsize = strlen(promptstring);
++          write_to_output(d, "%s", ProtocolOutput(d, promptstring, &promptsize));
+ 	      d->has_prompt = TRUE;
+       }
+     }
+@@ -1114,6 +1117,145 @@ void echo_on(struct descriptor_data *d)
+   write_to_output(d, "%s", on_string);
+ }
+ 
++char *prompt_str(struct char_data *ch)
++{
++    struct char_data *vict = FIGHTING(ch);  
++    static char pbuf[MAX_STRING_LENGTH];  
++    char *str = GET_PROMPT(ch);
++    struct char_data *tank;
++    int perc = 0;  
++    char *cp, *tmp;
++    char i[MAX_PROMPT_LENGTH];
++  
++    if (!str || !*str)
++        str = "@yA@YtBMU@yD@D: @cSet your prompt (see @D'@Chelp prompt@D'@c)@D>@n";
++        
++    if (!strchr(str, '%'))
++        return (str);
++    cp = pbuf;
++    
++    for (;;) {
++        if (*str == '%') {
++            switch (*(++str)) {
++                case 'h': // current hitp
++                    snprintf(i, sizeof(i), "%d", GET_HIT(ch));
++                    tmp = i;
++                    break;
++                case 'H': // maximum hitp
++                    snprintf(i, sizeof(i), "%d", GET_MAX_HIT(ch));
++                    tmp = i;
++                    break;
++                case 'm': // maximum mana
++                    snprintf(i, sizeof(i), "%d", GET_MANA(ch));
++                    tmp = i;
++                    break;
++                case 'M': // maximum mana
++                    snprintf(i, sizeof(i), "%d", GET_MAX_MANA(ch));
++                    tmp = i;
++                    break;
++                case 'v': // current moves
++                    snprintf(i, sizeof(i), "%d", GET_MOVE(ch));
++                    tmp = i;
++                    break;
++                case 'V': // maximum moves
++                    snprintf(i, sizeof(i), "%d", GET_MAX_MOVE(ch));
++                    tmp = i;
++                    break;
++                case 'P':
++                case 'p': // percentage of hitp/move/mana
++                    str++;
++                    switch (LOWER(*str)) {
++                        case 'h':
++                            perc = (100 * GET_HIT(ch)) / GET_MAX_HIT(ch);
++                            break;
++                        case 'm':
++                            perc = (100 * GET_MANA(ch)) / GET_MAX_MANA(ch);
++                            break;
++                        case 'v':
++                            perc = (100 * GET_MOVE(ch)) / GET_MAX_MOVE(ch);
++                            break;
++                        default :
++                            perc = 0;
++                            break;
++                    }
++                    snprintf(i, sizeof(i), "%d", perc);
++                    tmp = i;
++                    break;
++                case 'O':
++                case 'o': // opponent
++                    if (vict) {
++                        perc = (100*GET_HIT(vict)) / GET_MAX_HIT(vict);
++                        snprintf(i, sizeof(i), "%s (%s)", PERS(vict, ch),
++                            (perc >= 95 ?	"unscathed"	:
++                             perc >= 75 ?	"scratched"	:
++                             perc >= 50 ?	"beaten-up"	:
++                             perc >= 25 ?	"bloody"	:
++                                                "near death"));
++                        tmp = i;
++                    } else {
++                        str++;
++                        continue;
++                    }
++                    break;
++                case 'x': // current exp
++                    snprintf(i, sizeof(i), "%d", GET_EXP(ch));
++                    tmp = i;
++                    break;
++                case 'X': // exp to level
++                    snprintf(i, sizeof(i), "%d", level_exp(GET_CLASS(ch), GET_LEVEL(ch) + 1) - GET_EXP(ch));
++                    tmp = i;
++                    break;
++                case 'g': // gold on hand
++                    snprintf(i, sizeof(i), "%d", GET_GOLD(ch));
++                    tmp = i;
++                    break;
++                case 'G': // gold in bank
++                    snprintf(i, sizeof(i), "%d", GET_BANK_GOLD(ch));
++                    tmp = i;
++                    break;
++                case 'q': // Quest points
++                case 'Q':
++                    snprintf(i, sizeof(i), "%d", GET_QUESTPOINTS(ch));
++                    tmp = i;
++                    break;
++                case 'T':
++                case 't': // tank
++                    if (vict && (tank = FIGHTING(vict)) && tank != ch) {
++                        perc = (100*GET_HIT(tank)) / GET_MAX_HIT(tank);
++                        snprintf(i, sizeof(i), "%s (%s)", PERS(tank, ch),
++				(perc >= 95 ?	"unscathed"	:
++				perc >= 75 ?	"scratched"	:
++				perc >= 50 ?	"beaten-up"	:
++				perc >= 25 ?	"bloody"	:
++						"near death"));
++                        tmp = i;
++                    } else {
++                        str++;
++                        continue;
++                    }
++                    break;
++                case '_': // new line
++                    tmp = "\r\n";
++                    break;
++                case '%': // a percentage sign
++                    tmp = "%%";
++                    break;
++                default : // skip to next character if nothing matches
++                    str++;
++                    continue;
++            }
++            
++            while ((*cp = *(tmp++)))
++                cp++;
++            str++;
++        } else if (!(*(cp++) = *(str++)))
++            break;
++    }
++    *cp = '\0';
++    return (pbuf);
++}
++
++
+ static char *make_prompt(struct descriptor_data *d)
+ {
+   static char prompt[MAX_PROMPT_LENGTH];
+@@ -1137,43 +1279,6 @@ static char *make_prompt(struct descript
+       if (count >= 0)
+         len += count;
+     }
+-    /* show only when below 25% */
+-    if (PRF_FLAGGED(d->character, PRF_DISPAUTO) && len < sizeof(prompt)) {
+-      struct char_data *ch = d->character;
+-      if (GET_HIT(ch) << 2 < GET_MAX_HIT(ch) ) {
+-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dH ", GET_HIT(ch));
+-        if (count >= 0)
+-          len += count;
+-      }
+-      if (GET_MANA(ch) << 2 < GET_MAX_MANA(ch) && len < sizeof(prompt)) {
+-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dM ", GET_MANA(ch));
+-        if (count >= 0)
+-          len += count;
+-      }
+-      if (GET_MOVE(ch) << 2 < GET_MAX_MOVE(ch) && len < sizeof(prompt)) {
+-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dV ", GET_MOVE(ch));
+-        if (count >= 0)
+-          len += count;
+-      }
+-    } else { /* not auto prompt */
+-      if (PRF_FLAGGED(d->character, PRF_DISPHP) && len < sizeof(prompt)) {
+-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dH ", GET_HIT(d->character));
+-        if (count >= 0)
+-          len += count;
+-      }
+-
+-      if (PRF_FLAGGED(d->character, PRF_DISPMANA) && len < sizeof(prompt)) {
+-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dM ", GET_MANA(d->character));
+-        if (count >= 0)
+-          len += count;
+-      }
+-
+-      if (PRF_FLAGGED(d->character, PRF_DISPMOVE) && len < sizeof(prompt)) {
+-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dV ", GET_MOVE(d->character));
+-        if (count >= 0)
+-          len += count;
+-      }
+-    }
+ 
+     if (PRF_FLAGGED(d->character, PRF_BUILDWALK) && len < sizeof(prompt)) {
+       count = snprintf(prompt + len, sizeof(prompt) - len, "BUILDWALKING ");
+@@ -1201,8 +1306,12 @@ static char *make_prompt(struct descript
+          len += count;
+      }
+ 
+-    if (len < sizeof(prompt))
+-      strncat(prompt, "> ", sizeof(prompt) - len - 1);	/* strncat: OK */
++    count = snprintf(prompt + len, sizeof(prompt) - len, prompt_str(d->character));
++    if (count >= 0)
++        len += count;
++    
++    parse_at(prompt);
++     
+   } else if (STATE(d) == CON_PLAYING && IS_NPC(d->character))
+     snprintf(prompt, sizeof(prompt), "%s> ", GET_NAME(d->character));
+   else
+@@ -1573,9 +1683,13 @@ static int process_output(struct descrip
+     if ( !t->pProtocol->WriteOOB ) 
+       strcat(osb, "\r\n");	/* strcpy: OK (osb:MAX_SOCK_BUF-2 reserves space) */
+ 
+-  if (!t->pProtocol->WriteOOB) /* add a prompt */
+-    strcat(i, make_prompt(t));	/* strcpy: OK (i:MAX_SOCK_BUF reserves space) */
+-
++  if (!t->pProtocol->WriteOOB) {/* add a prompt */
++    /* strcpy: OK (i:MAX_SOCK_BUF reserves space) */
++      char *promptstring = make_prompt(t);
++    //int promptsize = strlen(make_prompt(t));
++      int promptsize = strlen(promptstring);
++    strcat(i, ProtocolOutput(t, promptstring, &promptsize));
++  }
+   /* now, send the output.  If this is an 'interruption', use the prepended
+    * CRLF, otherwise send the straight output sans CRLF. */
+   if (t->has_prompt && !t->pProtocol->WriteOOB) {
+@@ -2407,6 +2522,16 @@ void send_to_outdoor(const char *messg,
+   }
+ }
+ 
+
+diff -BbuprN -x '*.o' src_original/interpreter.c src/interpreter.c
+--- src_original/interpreter.c	2018-04-24 08:22:14.632024900 +0100
++++ src/interpreter.c	2018-04-26 19:33:22.889381800 +0100
+@@ -242,7 +242,7 @@ cpp_extern const struct command_info cmd
+   { "plist"    , "plist"   , POS_DEAD    , do_plist    , LVL_GOD, 0 },
+   { "policy"   , "pol"     , POS_DEAD    , do_gen_ps   , 0, SCMD_POLICIES },
+   { "pour"     , "pour"    , POS_STANDING, do_pour     , 0, SCMD_POUR },
+-  { "prompt"   , "pro"     , POS_DEAD    , do_display  , 0, 0 },
++  { "prompt"   , "pro"     , POS_DEAD    , do_prompt  , 0, 0 },
+   { "prefedit" , "pre"     , POS_DEAD    , do_oasis_prefedit , 0, 0 },
+   { "purge"    , "purge"   , POS_DEAD    , do_purge    , LVL_BUILDER, 0 },
+ 
+
+diff -BbuprN -x '*.o' src_original/players.c src/players.c
+--- src_original/players.c	2018-04-24 08:22:16.840898100 +0100
++++ src/players.c	2018-04-26 19:31:34.394124400 +0100
+@@ -409,6 +409,7 @@ int load_char(const char *name, struct c
+ 	else if (!strcmp(tag, "Plyd"))	ch->player.time.played	= atoi(line);
+ 	else if (!strcmp(tag, "PfIn"))	POOFIN(ch)		= strdup(line);
+ 	else if (!strcmp(tag, "PfOt"))	POOFOUT(ch)		= strdup(line);
++        else if (!strcmp(tag, "Prmt"))	GET_PROMPT(ch) = strdup(line);
+         else if (!strcmp(tag, "Pref")) {
+           if (sscanf(line, "%s %s %s %s", f1, f2, f3, f4) == 4) {
+             PRF_FLAGS(ch)[0] = asciiflag_conv(f1);
+@@ -571,6 +572,7 @@ void save_char(struct char_data * ch)
+     strip_cr(buf);
+     fprintf(fl, "Desc:\n%s~\n", buf);
+   }
++  if (GET_PROMPT(ch))                           fprintf(fl, "Prmt: %s\n", GET_PROMPT(ch));
+   if (POOFIN(ch))				fprintf(fl, "PfIn: %s\n", POOFIN(ch));
+   if (POOFOUT(ch))				fprintf(fl, "PfOt: %s\n", POOFOUT(ch));
+   if (GET_SEX(ch)	     != PFDEF_SEX)	fprintf(fl, "Sex : %d\n", GET_SEX(ch));
+diff -BbuprN -x '*.o' src_original/structs.h src/structs.h
+--- src_original/structs.h	2018-04-24 08:22:18.278723600 +0100
++++ src/structs.h	2018-04-26 21:02:27.450844200 +0100
+ /* Affect bits: used in char_data.char_specials.saved.affected_by */
+ /* WARNING: In the world files, NEVER set the bits marked "R" ("Reserved") */
+@@ -585,7 +587,7 @@
+ #define PULSE_TIMESAVE	(30 * 60 RL_SEC)
+ /* Variables for the output buffering system */
+ #define MAX_SOCK_BUF       (24 * 1024) /**< Size of kernel's sock buf   */
+-#define MAX_PROMPT_LENGTH  96          /**< Max length of prompt        */
++#define MAX_PROMPT_LENGTH  196          /**< Max length of prompt        */
+ #define GARBAGE_SPACE      32          /**< Space for **OVERFLOW** etc  */
+ #define SMALL_BUFSIZE      1024        /**< Static output buffer size   */
+ /** Max amount of output that can be buffered */
+@@ -862,6 +864,7 @@ struct char_player_data
+   char *long_descr;              /**< PC / NPC look description */
+   char *description;             /**< NPC Extra descriptions */
+   char *title;                   /**< PC / NPC title */
++  char *prompt;                  /**< PC Custom Prompt */
+   byte sex;                      /**< PC / NPC sex */
+   byte chclass;                  /**< PC / NPC class */
+   byte level;                    /**< PC / NPC level */
+diff -BbuprN -x '*.o' src_original/utils.h src/utils.h
+--- src_original/utils.h	2018-04-24 08:22:18.607595800 +0100
++++ src/utils.h	2018-04-26 19:26:31.591731700 +0100
+@@ -470,6 +470,8 @@ do
+ 			 (ch)->player.short_descr : GET_PC_NAME(ch))
+ /** Title of PC */
+ #define GET_TITLE(ch)   ((ch)->player.title)
++/** Custom Prompt */
++#define GET_PROMPT(ch)		((ch)->player.prompt)
+ /** Level of PC or NPC. */
+ #define GET_LEVEL(ch)   ((ch)->player.level)
+ /** Password of PC. */
+ 

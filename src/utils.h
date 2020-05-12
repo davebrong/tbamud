@@ -470,6 +470,8 @@ do                                                              \
 			 (ch)->player.short_descr : GET_PC_NAME(ch))
 /** Title of PC */
 #define GET_TITLE(ch)   ((ch)->player.title)
+/** Custom Prompt */
+#define GET_PROMPT(ch)		((ch)->player.prompt)
 /** Level of PC or NPC. */
 #define GET_LEVEL(ch)   ((ch)->player.level)
 /** Password of PC. */

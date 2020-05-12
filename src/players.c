@@ -409,6 +409,7 @@ int load_char(const char *name, struct char_data *ch)
 	else if (!strcmp(tag, "Plyd"))	ch->player.time.played	= atoi(line);
 	else if (!strcmp(tag, "PfIn"))	POOFIN(ch)		= strdup(line);
 	else if (!strcmp(tag, "PfOt"))	POOFOUT(ch)		= strdup(line);
+	else if (!strcmp(tag, "Prmt"))	GET_PROMPT(ch) = strdup(line);
         else if (!strcmp(tag, "Pref")) {
           if (sscanf(line, "%s %s %s %s", f1, f2, f3, f4) == 4) {
             PRF_FLAGS(ch)[0] = asciiflag_conv(f1);
@@ -571,6 +572,7 @@ void save_char(struct char_data * ch)
     strip_cr(buf);
     fprintf(fl, "Desc:\n%s~\n", buf);
   }
+  if (GET_PROMPT(ch))                           fprintf(fl, "Prmt: %s\n", GET_PROMPT(ch));
   if (POOFIN(ch))				fprintf(fl, "PfIn: %s\n", POOFIN(ch));
   if (POOFOUT(ch))				fprintf(fl, "PfOt: %s\n", POOFOUT(ch));
   if (GET_SEX(ch)	     != PFDEF_SEX)	fprintf(fl, "Sex : %d\n", GET_SEX(ch));

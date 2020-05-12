@@ -89,6 +89,7 @@
 
 extern time_t motdmod;
 extern time_t newsmod;
+extern int level_exp(int chclass, int level);
 
 /* locally defined globals, used externally */
 struct descriptor_data *descriptor_list = NULL;   /* master desc list */
@@ -920,7 +921,9 @@ void game_loop(socket_t local_mother_desc)
     /* Print prompts for other descriptors who had no other output */
     for (d = descriptor_list; d; d = d->next) {
       if (!d->has_prompt) {
-	      write_to_descriptor(d->descriptor, make_prompt(d));
+	      char *promptstring = make_prompt(d);
+          int promptsize = strlen(promptstring);
+          write_to_output(d, "%s", ProtocolOutput(d, promptstring, &promptsize));
 	      d->has_prompt = TRUE;
       }
     }
@@ -1123,6 +1126,144 @@ void echo_on(struct descriptor_data *d)
   write_to_output(d, "%s", on_string);
 }
 
+char *prompt_str(struct char_data *ch)
+{
+    struct char_data *vict = FIGHTING(ch);  
+    static char pbuf[MAX_STRING_LENGTH];  
+    char *str = GET_PROMPT(ch);
+    struct char_data *tank;
+    int perc = 0;  
+    char *cp, *tmp;
+    char i[MAX_PROMPT_LENGTH];
+  
+    if (!str || !*str)
+        str = "@yA@YtBMU@yD@D: @cSet your prompt (see @D'@Chelp prompt@D'@c)@D>@n";
+        
+    if (!strchr(str, '%'))
+        return (str);
+    cp = pbuf;
+    
+    for (;;) {
+        if (*str == '%') {
+            switch (*(++str)) {
+                case 'h': // current hitp
+                    snprintf(i, sizeof(i), "%d", GET_HIT(ch));
+                    tmp = i;
+                    break;
+                case 'H': // maximum hitp
+                    snprintf(i, sizeof(i), "%d", GET_MAX_HIT(ch));
+                    tmp = i;
+                    break;
+                case 'm': // maximum mana
+                    snprintf(i, sizeof(i), "%d", GET_MANA(ch));
+                    tmp = i;
+                    break;
+                case 'M': // maximum mana
+                    snprintf(i, sizeof(i), "%d", GET_MAX_MANA(ch));
+                    tmp = i;
+                    break;
+                case 'v': // current moves
+                    snprintf(i, sizeof(i), "%d", GET_MOVE(ch));
+                    tmp = i;
+                    break;
+                case 'V': // maximum moves
+                    snprintf(i, sizeof(i), "%d", GET_MAX_MOVE(ch));
+                    tmp = i;
+                    break;
+                case 'P':
+                case 'p': // percentage of hitp/move/mana
+                    str++;
+                    switch (LOWER(*str)) {
+                        case 'h':
+                            perc = (100 * GET_HIT(ch)) / GET_MAX_HIT(ch);
+                            break;
+                        case 'm':
+                            perc = (100 * GET_MANA(ch)) / GET_MAX_MANA(ch);
+                            break;
+                        case 'v':
+                            perc = (100 * GET_MOVE(ch)) / GET_MAX_MOVE(ch);
+                            break;
+                        default :
+                            perc = 0;
+                            break;
+                    }
+                    snprintf(i, sizeof(i), "%d", perc);
+                    tmp = i;
+                    break;
+                case 'O':
+                case 'o': // opponent
+                    if (vict) {
+                        perc = (100*GET_HIT(vict)) / GET_MAX_HIT(vict);
+                        snprintf(i, sizeof(i), "%s (%s)", PERS(vict, ch),
+                            (perc >= 95 ?	"unscathed"	:
+                             perc >= 75 ?	"scratched"	:
+                             perc >= 50 ?	"beaten-up"	:
+                             perc >= 25 ?	"bloody"	:
+                                                "near death"));
+                        tmp = i;
+                    } else {
+                        str++;
+                        continue;
+                    }
+                    break;
+                case 'x': // current exp
+                    snprintf(i, sizeof(i), "%d", GET_EXP(ch));
+                    tmp = i;
+                    break;
+                case 'X': // exp to level
+                    snprintf(i, sizeof(i), "%d", level_exp(GET_CLASS(ch), GET_LEVEL(ch) + 1) - GET_EXP(ch));
+                    tmp = i;
+                    break;
+                case 'g': // gold on hand
+                    snprintf(i, sizeof(i), "%d", GET_GOLD(ch));
+                    tmp = i;
+                    break;
+                case 'G': // gold in bank
+                    snprintf(i, sizeof(i), "%d", GET_BANK_GOLD(ch));
+                    tmp = i;
+                    break;
+                case 'q': // Quest points
+                case 'Q':
+                    snprintf(i, sizeof(i), "%d", GET_QUESTPOINTS(ch));
+                    tmp = i;
+                    break;
+                case 'T':
+                case 't': // tank
+                    if (vict && (tank = FIGHTING(vict)) && tank != ch) {
+                        perc = (100*GET_HIT(tank)) / GET_MAX_HIT(tank);
+                        snprintf(i, sizeof(i), "%s (%s)", PERS(tank, ch),
+				(perc >= 95 ?	"unscathed"	:
+				perc >= 75 ?	"scratched"	:
+				perc >= 50 ?	"beaten-up"	:
+				perc >= 25 ?	"bloody"	:
+						"near death"));
+                        tmp = i;
+                    } else {
+                        str++;
+                        continue;
+                    }
+                    break;
+                case '_': // new line
+                    tmp = "\r\n";
+                    break;
+                case '%': // a percentage sign
+                    tmp = "%%";
+                    break;
+                default : // skip to next character if nothing matches
+                    str++;
+                    continue;
+            }
+            
+            while ((*cp = *(tmp++)))
+                cp++;
+            str++;
+        } else if (!(*(cp++) = *(str++)))
+            break;
+    }
+    *cp = '\0';
+    return (pbuf);
+}
+
 static char *make_prompt(struct descriptor_data *d)
 {
   static char prompt[MAX_PROMPT_LENGTH];
@@ -1145,43 +1286,6 @@ static char *make_prompt(struct descriptor_data *d)
       count = snprintf(prompt + len, sizeof(prompt) - len, "i%d ", GET_INVIS_LEV(d->character));
       if (count >= 0)
         len += count;
-    }
-    /* show only when below 25% */
-    if (PRF_FLAGGED(d->character, PRF_DISPAUTO) && len < sizeof(prompt)) {
-      struct char_data *ch = d->character;
-      if (GET_HIT(ch) << 2 < GET_MAX_HIT(ch) ) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dH ", GET_HIT(ch));
-        if (count >= 0)
-          len += count;
-      }
-      if (GET_MANA(ch) << 2 < GET_MAX_MANA(ch) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dM ", GET_MANA(ch));
-        if (count >= 0)
-          len += count;
-      }
-      if (GET_MOVE(ch) << 2 < GET_MAX_MOVE(ch) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dV ", GET_MOVE(ch));
-        if (count >= 0)
-          len += count;
-      }
-    } else { /* not auto prompt */
-      if (PRF_FLAGGED(d->character, PRF_DISPHP) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dH ", GET_HIT(d->character));
-        if (count >= 0)
-          len += count;
-      }
-
-      if (PRF_FLAGGED(d->character, PRF_DISPMANA) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dM ", GET_MANA(d->character));
-        if (count >= 0)
-          len += count;
-      }
-
-      if (PRF_FLAGGED(d->character, PRF_DISPMOVE) && len < sizeof(prompt)) {
-        count = snprintf(prompt + len, sizeof(prompt) - len, "%dV ", GET_MOVE(d->character));
-        if (count >= 0)
-          len += count;
-      }
     }
 
     if (PRF_FLAGGED(d->character, PRF_BUILDWALK) && len < sizeof(prompt)) {
@@ -1210,8 +1314,11 @@ static char *make_prompt(struct descriptor_data *d)
          len += count;
      }
 
-    if (len < sizeof(prompt))
-      strncat(prompt, "> ", sizeof(prompt) - len - 1);	/* strncat: OK */
+    count = snprintf(prompt + len, sizeof(prompt) - len, prompt_str(d->character));
+    if (count >= 0)
+        len += count;
+    
+    parse_at(prompt);
   } else if (STATE(d) == CON_PLAYING && IS_NPC(d->character))
     snprintf(prompt, sizeof(prompt), "%s> ", GET_NAME(d->character));
   else
@@ -1582,9 +1689,14 @@ static int process_output(struct descriptor_data *t)
     if ( !t->pProtocol->WriteOOB ) 
       strcat(osb, "\r\n");	/* strcpy: OK (osb:MAX_SOCK_BUF-2 reserves space) */
 
-  if (!t->pProtocol->WriteOOB) /* add a prompt */
-    strcat(i, make_prompt(t));	/* strcpy: OK (i:MAX_SOCK_BUF reserves space) */
-
+	if (!t->pProtocol->WriteOOB) {/* add a prompt */
+		/* strcpy: OK (i:MAX_SOCK_BUF reserves space) */
+		char *promptstring = make_prompt(t);
+		//int promptsize = strlen(make_prompt(t));
+		int promptsize = strlen(promptstring);
+		strcat(i, ProtocolOutput(t, promptstring, &promptsize));
+	}
+  
   /* now, send the output.  If this is an 'interruption', use the prepended
    * CRLF, otherwise send the straight output sans CRLF. */
   if (t->has_prompt && !t->pProtocol->WriteOOB) {

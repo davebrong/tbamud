@@ -612,57 +612,63 @@ ACMD(do_use)
 
 ACMD(do_display)
 {
-  size_t i;
+    char arg[MAX_INPUT_LENGTH];
+    int i, x;
 
-  if (IS_NPC(ch)) {
-    send_to_char(ch, "Monsters don't need displays.  Go away.\r\n");
-    return;
+    const char *def_prompts[][2] = {        
+        { "Stock Circle"	     , "\tn%hhp %mmn %vmv>"					},
+	{ "Colorized Standard Circle", "\tR%h\trhp \tB%m\tbmn \tG%v\tgmv\tD>\tn"			},
+	{ "Standard Percentile"	     , "\tR%ph%%\trhp \tB%pm%%\tbmn \tG%pv%%\tgmv\tD>\tn \tR%O \tY%T\tn"	},
+	{ "Extra Features"	     , "\tcOpponent\tD: \tB%o \tW/ \tcTank\tD: \tB%t%_"
+                                               "\tR%h\tD(\tr%H\tD)\twhitp \tB%m\tD(\tb%M\tD)\twmana \tG%v\tD(\tg%V\tD)\twmove\tn>"},
+        { "Full Featured"            , "\tR%O \tY%T%_"
+                                               "\tR%h\tD/\tr%H \tB%m\tD/\tb%M \tG%v\tD/\tg%V %_\tY%g\tygold \tW%x\twxp \tM%q\tmqp\tD>\tn"},
+	{ "\n"                       , "\n"				 }
+	};
+    one_argument(argument, arg);
+    if (!*arg) {
+        send_to_char(ch, "The following pre-set prompts are available...\r\n");
+        
+        for (i = 0; *def_prompts[i][0] != '\n'; i++)
+            send_to_char(ch, "  %d. %-25s  %s\r\n", i, def_prompts[i][0], def_prompts[i][1]);
+        
+        send_to_char(ch, "\r\nUsage: display <number>\r\n"
+			 "To create your own prompt, use \"prompt <str>\".\r\n");
+    } else if (!isdigit(*arg))
+        send_to_char(ch, "Usage: display <number>\r\n"
+   			 "Type \"display\" without arguments for a list of preset prompts.\r\n");
+    else {
+        i = atoi(arg);
+        if (i < 0) {
+            send_to_char(ch, "The number cannot be negative.\r\n");
+        } else {
+            for (x = 0; *def_prompts[x][0] != '\n'; x++);
+            if (i >= x) {
+                send_to_char(ch, "The range for the prompt number is 0-%d.\r\n", x);
+            } else {
+                if (GET_PROMPT(ch))
+                    free(GET_PROMPT(ch));
+                GET_PROMPT(ch) = strdup(def_prompts[i][1]);
+                send_to_char(ch, "Set your prompt to the %s preset prompt.\r\n", def_prompts[i][0]);
   }
+  }
+  }
+}
+
+
+ACMD(do_prompt) 
+{
   skip_spaces(&argument);
-
   if (!*argument) {
-    send_to_char(ch, "Usage: prompt { { H | M | V } | all | auto | none }\r\n");
-    return;
-  }
-
-  if (!str_cmp(argument, "auto")) {
-    TOGGLE_BIT_AR(PRF_FLAGS(ch), PRF_DISPAUTO);
-    send_to_char(ch, "Auto prompt %sabled.\r\n", PRF_FLAGGED(ch, PRF_DISPAUTO) ? "en" : "dis");
-    return;
-  }
-
-  if (!str_cmp(argument, "on") || !str_cmp(argument, "all")) {
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
-  } else if (!str_cmp(argument, "off") || !str_cmp(argument, "none")) {
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+    send_to_char(ch, "Your prompt is currently: %s\r\n", (GET_PROMPT(ch) ? GET_PROMPT(ch) : "n/a"));
   } else {
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
+    if (GET_PROMPT(ch))		
+        free(GET_PROMPT(ch));
 
-    for (i = 0; i < strlen(argument); i++) {
-      switch (LOWER(argument[i])) {
-      case 'h':
-        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
-	break;
-      case 'm':
-        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMANA);
-	break;
-      case 'v':
-        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMOVE);
-	break;
-      default:
-	send_to_char(ch, "Usage: prompt { { H | M | V } | all | auto | none }\r\n");
-	return;
-      }
-    }
+    GET_PROMPT(ch) = strdup(argument);
+    delete_doubledollar(GET_PROMPT(ch));
+    send_to_char(ch, "Okay, set your prompt to: %s\r\n", GET_PROMPT(ch));
   }
-
-  send_to_char(ch, "%s", CONFIG_OK);
 }
 
 #define TOG_OFF 0
